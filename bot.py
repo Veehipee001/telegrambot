@@ -15,11 +15,11 @@ def reply_smart(message):
     if "hello" in text or "hi" in text:
         bot.reply_to(message, "Hey! Xup how ya doing?")
     elif "how are you" in text:
-        bot.reply_to(message, "I'm just a bot, but I'm functioning as expected. ??")
+        bot.reply_to(message, "I'm just a bot, but I'm functioning as expected. ")
     elif "bye" in text:
         bot.reply_to(message, "Goodbye! Chat again soon.")
     else:
-        bot.reply_to(message, "I'm here to help, but I didn’t quite understand that. ??")
+        bot.reply_to(message, "I'm here to help, but I didn’t quite understand that. ")
 
 # Keep the bot running
 bot.infinity_polling()
