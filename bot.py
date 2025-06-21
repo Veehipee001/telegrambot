@@ -4,8 +4,9 @@ import telebot
 
 # Get your bot token from Render's environment variable
 TOKEN = os.environ.get("TOKEN")
+if not TOKEN:
+    raise ValueError("Bot token not set in environment variable.")
 
-bot = telebot.TeleBot(TOKEN)
 
 # --- Smart Reply Logic ---
 @bot.message_handler(func=lambda message: True)
