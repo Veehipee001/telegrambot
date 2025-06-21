@@ -1,26 +1,20 @@
-
-import os
 import telebot
+import os
 
-# Get your bot token from Render's environment variable
+# Get the bot token from environment variable
 TOKEN = os.environ.get("TOKEN")
+
+# Ensure token is available
 if not TOKEN:
     raise ValueError("Bot token not set in environment variable.")
 
+# Initialize the bot
+bot = telebot.TeleBot(TOKEN)
 
-# --- Smart Reply Logic ---
+# Respond to any message with a fixed reply
 @bot.message_handler(func=lambda message: True)
-def reply_smart(message):
-    text = message.text.lower()
+def reply_fixed(message):
+    bot.reply_to(message, "Yo xup, we will get back to you")
 
-    if "hello" in text or "hi" in text:
-        bot.reply_to(message, "Hey, Xup how ya doing")
-    elif "how are you" in text:
-        bot.reply_to(message, "I  am just a bot, but I'm functioning as expected. ")
-    elif "bye" in text:
-        bot.reply_to(message, "Goodbye, chat again soon.")
-    else:
-        bot.reply_to(message, "I am here to help, but I do not quite understand that. ")
-
-# Keep the bot running
-bot.infinity_polling()
+# Start polling (keeps the bot online)
+bot.polling()
