@@ -1,20 +1,47 @@
-import telebot
 import os
+import telebot
+import openai
 
-# Get the bot token from environment variable
-TOKEN = os.environ.get("TOKEN")
+# Environment variables
+TOKEN = os.getenv("TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Ensure token is available
-if not TOKEN:
-    raise ValueError("Bot token not set in environment variable.")
-
-# Initialize the bot
 bot = telebot.TeleBot(TOKEN)
+openai.api_key = OPENAI_API_KEY
 
-# Respond to any message with a fixed reply
+# Keyword-based responses
+keyword_responses = {
+    "hello": "Hi there! ??",
+    "bye": "Goodbye! ??",
+    "help": "How can I assist you?",
+}
+
+# Function to get ChatGPT reply
+def get_gpt_response(message_text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if enabled
+            messages=[{"role": "user", "content": message_text}],
+            max_tokens=150,
+            temperature=0.7,
+        )
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        return "Sorry, I couldn't reach ChatGPT right now."
+
 @bot.message_handler(func=lambda message: True)
-def reply_fixed(message):
-    bot.reply_to(message, "Yo xup, we will get back to you")
+def handle_message(message):
+    user_text = message.text.lower().strip()
 
-# Start polling (keeps the bot online)
+    # Check if message matches a keyword
+    for keyword in keyword_responses:
+        if keyword in user_text:
+            bot.reply_to(message, keyword_responses[keyword])
+            return
+
+    # Else, get ChatGPT response
+    gpt_reply = get_gpt_response(message.text)
+    bot.reply_to(message, gpt_reply)
+
+print("Bot is running...")
 bot.polling()
