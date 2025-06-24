@@ -1,0 +1,11 @@
+services:
+  - type: worker
+    name: telegram-chatgpt-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: TOKEN
+        sync: true
+      - key: OPENAI_API_KEY
+        sync: true
