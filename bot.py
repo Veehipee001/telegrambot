@@ -2,47 +2,53 @@ import os
 import telebot
 import openai
 
-# Get tokens from environment variables
+# Get keys from environment variables
 BOT_TOKEN = os.getenv("TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+LEMONFOX_KEY = os.getenv("LEMONFOX_API_KEY")
 
+if not BOT_TOKEN or not LEMONFOX_KEY:
+    raise ValueError("Missing TOKEN or LEMONFOX_API_KEY env vars")
+
+# Setup Telegram bot
 bot = telebot.TeleBot(BOT_TOKEN)
-openai.api_key = OPENAI_API_KEY
 
-# Define some simple keyword responses
-keyword_responses = {
-    "hi": "Hey! How can I help you?",
-    "hello": "Hello there! ??",
-    "help": "I can assist you with general questions or respond like ChatGPT!",
+# Configure Lemonfox OpenAI-compatible API
+openai.api_key = LEMONFOX_KEY
+openai.api_base = "https://api.lemonfox.ai/v1"
+
+# Pre-defined keyword replies
+keyword_replies = {
+    "hi": "Hey there! How can I assist you?",
+    "hello": "Hello! ",
+    "help": "I'm here to help. Ask me anything!",
     "xup": "Yo xup, we will get back to you."
 }
 
-# Check if message matches any keywords
-def check_keywords(message_text):
-    for keyword, response in keyword_responses.items():
-        if keyword in message_text.lower():
-            return response
+def check_keyword(text):
+    for k, v in keyword_replies.items():
+        if k in text.lower():
+            return v
     return None
 
-# Handle all messages
-@bot.message_handler(func=lambda message: True)
-def reply_to_message(message):
-    user_text = message.text
-    keyword_reply = check_keywords(user_text)
-
-    if keyword_reply:
-        bot.reply_to(message, keyword_reply)
+# Handle all incoming messages
+@bot.message_handler(func=lambda msg: True)
+def reply(msg):
+    text = msg.text or ""
+    kw = check_keyword(text)
+    if kw:
+        bot.reply_to(msg, kw)
     else:
-        # Fallback to GPT
+        # AI fallback via Lemonfox
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": user_text}]
+            r = openai.ChatCompletion.create(
+                model="llama-8b-chat",
+                messages=[{"role":"user", "content": text}],
+                max_tokens=200,
+                temperature=0.7
             )
-            bot.reply_to(message, response.choices[0].message['content'].strip())
-        except Exception as e:
-            bot.reply_to(message, "Sorry, I couldn't reach ChatGPT right now.")
+            bot.reply_to(msg, r.choices[0].message["content"].strip())
+        except Exception:
+            bot.reply_to(msg, "Oops, I couldn't reach AI right now.")
 
-# Run the bot
-print("Bot is running...")
+print("Bot is up and running")
 bot.infinity_polling()

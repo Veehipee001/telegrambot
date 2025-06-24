@@ -1,12 +1,11 @@
 services:
-  - type: web
-    name: telegram-chatgpt-bot
+  - type: worker
+    name: telegram-lemonfox-bot
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
-    autoDeploy: true
     envVars:
       - key: TOKEN
-        value: 7765489129:AAECLQL8HdmJUWaws8IfqvWcLve7WWGOCgk
-      - key: OPENAI_API_KEY
-        value: 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
+        sync: true
+      - key: LEMONFOX_API_KEY
+        sync: true
