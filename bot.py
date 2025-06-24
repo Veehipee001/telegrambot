@@ -2,46 +2,46 @@ import os
 import telebot
 import openai
 
-# Environment variables
-TOKEN = os.getenv("TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# ====== SETUP ======
+TELEGRAM_TOKEN = os.getenv("TOKEN")  # from Render env var
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # from Render env var
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 openai.api_key = OPENAI_API_KEY
 
-# Keyword-based responses
-keyword_responses = {
-    "hello": "Hi there! ??",
-    "bye": "Goodbye! ??",
-    "help": "How can I assist you?",
+# ====== KEYWORD RESPONSES ======
+keyword_replies = {
+    "hello": "Hey there! How can I help you today?",
+    "price": "Our pricing details are available on the website.",
+    "hours": "We are available 24/7!",
 }
 
-# Function to get ChatGPT reply
-def get_gpt_response(message_text):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # or "gpt-4" if enabled
-            messages=[{"role": "user", "content": message_text}],
-            max_tokens=150,
-            temperature=0.7,
-        )
-        return response['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        return "Sorry, I couldn't reach ChatGPT right now."
-
+# ====== MESSAGE HANDLER ======
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
-    user_text = message.text.lower().strip()
+    text = message.text.lower()
 
-    # Check if message matches a keyword
-    for keyword in keyword_responses:
-        if keyword in user_text:
-            bot.reply_to(message, keyword_responses[keyword])
+    # 1. Keyword response
+    for keyword, reply in keyword_replies.items():
+        if keyword in text:
+            bot.reply_to(message, reply)
             return
 
-    # Else, get ChatGPT response
-    gpt_reply = get_gpt_response(message.text)
-    bot.reply_to(message, gpt_reply)
+    # 2. ChatGPT response
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": text},
+            ]
+        )
+        reply = response.choices[0].message.content
+        bot.reply_to(message, reply)
 
-print("Bot is running...")
+    except Exception as e:
+        bot.reply_to(message, "Yo xup, we will get back to you")
+
+# ====== START BOT ======
+print("Bot is running/live...")
 bot.polling()
